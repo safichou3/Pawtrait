@@ -1,0 +1,60 @@
+{
+  "applications": "*",
+  "changelogDate": "20230921092855",
+  "dto": "mapstruct",
+  "embedded": false,
+  "entityTableName": "report",
+  "fields": [
+    {
+      "fieldName": "type",
+      "fieldType": "String"
+    },
+    {
+      "fieldName": "description",
+      "fieldType": "String"
+    },
+    {
+      "fieldName": "resolutionDate",
+      "fieldType": "Instant"
+    },
+    {
+      "fieldName": "status",
+      "fieldType": "String"
+    },
+    {
+      "fieldName": "createdAt",
+      "fieldType": "Instant"
+    },
+    {
+      "fieldName": "updatedAt",
+      "fieldType": "Instant"
+    },
+    {
+      "fieldName": "deletedAt",
+      "fieldType": "Instant"
+    }
+  ],
+  "fluentMethods": true,
+  "jpaMetamodelFiltering": false,
+  "name": "Report",
+  "pagination": "infinite-scroll",
+  "readOnly": false,
+  "relationships": [
+    {
+      "otherEntityName": "user",
+      "relationshipName": "reportedBy",
+      "relationshipType": "many-to-one"
+    },
+    {
+      "otherEntityName": "user",
+      "relationshipName": "resolvedBy",
+      "relationshipType": "many-to-one"
+    },
+    {
+      "otherEntityName": "photo",
+      "relationshipName": "photo",
+      "relationshipType": "many-to-one"
+    }
+  ],
+  "service": "serviceClass"
+}

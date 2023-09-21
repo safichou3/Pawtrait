@@ -1,0 +1,81 @@
+entity ApplicationUser {
+  	profilePicture String
+  	bio String
+  	status String
+  	createdAt Instant
+  	updatedAt Instant
+  	deletedAt Instant
+}
+
+relationship OneToOne {
+  	ApplicationUser{internalUser} to User
+}
+
+entity Photo {
+	photoUrl String
+    description String
+    cuteness Long
+	createdAt Instant
+  	updatedAt Instant
+  	deletedAt Instant
+}
+
+relationship ManyToOne {
+  	Photo{user} to User
+  	Photo{category} to Category
+}
+
+entity Category {
+	name String
+    createdAt Instant
+  	updatedAt Instant
+  	deletedAt Instant
+}
+
+entity Tag {
+	name String
+    createdAt Instant
+  	updatedAt Instant
+  	deletedAt Instant
+}
+
+entity PhotoTag {
+	createdAt Instant
+  	updatedAt Instant
+  	deletedAt Instant
+}
+
+relationship ManyToOne {
+  	PhotoTag{user} to Tag
+  	PhotoTag{photo} to Photo
+}
+
+entity Like {
+	createdAt Instant
+  	updatedAt Instant
+  	deletedAt Instant
+}
+
+relationship ManyToOne {
+  	Like{user} to User
+  	Like{photo} to Photo
+}
+
+entity Report {
+	type String
+    description String
+    resolutionDate Instant
+    status String
+    createdAt Instant
+  	updatedAt Instant
+  	deletedAt Instant
+}
+
+relationship ManyToOne {
+  	Report{reportedBy} to User
+  	Report{resolvedBy} to User
+    Report{photo} to Photo
+}
+
+paginate * with infinite-scroll
+dto * with mapstruct

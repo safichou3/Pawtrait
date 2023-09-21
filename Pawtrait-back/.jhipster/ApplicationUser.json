@@ -1,0 +1,47 @@
+{
+  "applications": "*",
+  "changelogDate": "20230921092849",
+  "dto": "mapstruct",
+  "embedded": false,
+  "entityTableName": "application_user",
+  "fields": [
+    {
+      "fieldName": "profilePicture",
+      "fieldType": "String"
+    },
+    {
+      "fieldName": "bio",
+      "fieldType": "String"
+    },
+    {
+      "fieldName": "status",
+      "fieldType": "String"
+    },
+    {
+      "fieldName": "createdAt",
+      "fieldType": "Instant"
+    },
+    {
+      "fieldName": "updatedAt",
+      "fieldType": "Instant"
+    },
+    {
+      "fieldName": "deletedAt",
+      "fieldType": "Instant"
+    }
+  ],
+  "fluentMethods": true,
+  "jpaMetamodelFiltering": false,
+  "name": "ApplicationUser",
+  "pagination": "infinite-scroll",
+  "readOnly": false,
+  "relationships": [
+    {
+      "otherEntityName": "user",
+      "ownerSide": true,
+      "relationshipName": "internalUser",
+      "relationshipType": "one-to-one"
+    }
+  ],
+  "service": "serviceClass"
+}
