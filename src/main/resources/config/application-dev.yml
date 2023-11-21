@@ -36,7 +36,7 @@ spring:
       database: Pawtrait
   mail:
     host: localhost
-    port: 25
+    port: 1025
     username:
     password:
   messages:
