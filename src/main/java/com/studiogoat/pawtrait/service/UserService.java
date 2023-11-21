@@ -13,11 +13,18 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.stream.Collectors;
+
+import javax.mail.MessagingException;
+import javax.mail.internet.MimeMessage;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.CacheManager;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -38,6 +45,10 @@ public class UserService {
     private final AuthorityRepository authorityRepository;
 
     private final CacheManager cacheManager;
+
+    @Autowired
+private JavaMailSender javaMailSender;
+
 
     public UserService(
         UserRepository userRepository,
@@ -114,7 +125,6 @@ public class UserService {
         User newUser = new User();
         String encryptedPassword = passwordEncoder.encode(password);
         newUser.setLogin(userDTO.getLogin().toLowerCase());
-        // new user gets initially a generated password
         newUser.setPassword(encryptedPassword);
         newUser.setFirstName(userDTO.getFirstName());
         newUser.setLastName(userDTO.getLastName());
@@ -123,9 +133,7 @@ public class UserService {
         }
         newUser.setImageUrl(userDTO.getImageUrl());
         newUser.setLangKey(userDTO.getLangKey());
-        // new user is not active
         newUser.setActivated(false);
-        // new user gets registration key
         newUser.setActivationKey(RandomUtil.generateActivationKey());
         Set<Authority> authorities = new HashSet<>();
         authorityRepository.findById(AuthoritiesConstants.USER).ifPresent(authorities::add);
@@ -133,9 +141,25 @@ public class UserService {
         userRepository.save(newUser);
         this.clearUserCaches(newUser);
         log.debug("Created Information for User: {}", newUser);
+    
+        // Envoyer un e-mail de confirmation
+        sendConfirmationEmail(newUser);
+    
         return newUser;
     }
+private void sendConfirmationEmail(User user) {
+    MimeMessage mimeMessage = javaMailSender.createMimeMessage();
+    MimeMessageHelper messageHelper = new MimeMessageHelper(mimeMessage, "utf-8");
 
+    try {
+        messageHelper.setText("Merci de vous être inscrit sur Pawtrait.");
+        messageHelper.setTo(user.getEmail());
+        messageHelper.setSubject("Confirmation d'inscription sur Pawtrait");
+        javaMailSender.send(mimeMessage);
+    } catch (MessagingException e) {
+        log.error("Erreur lors de l'envoi de l'e-mail de confirmation", e);
+    }
+}
     private boolean removeNonActivatedUser(User existingUser) {
         if (existingUser.isActivated()) {
             return false;

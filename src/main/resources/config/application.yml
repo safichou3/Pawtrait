@@ -111,6 +111,11 @@ spring:
     enabled: false
   messages:
     basename: i18n/messages
+  mail:
+    host: localhost
+    port: 1025
+    username:
+    password:
   main:
     allow-bean-definition-overriding: true
   mvc:
