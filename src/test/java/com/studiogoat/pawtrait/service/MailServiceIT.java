@@ -14,6 +14,7 @@ import java.io.InputStreamReader;
 import java.net.URI;
 import java.net.URL;
 import java.nio.charset.Charset;
+import java.util.Optional;
 import java.util.Properties;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -128,7 +129,8 @@ class MailServiceIT {
         user.setLangKey(Constants.DEFAULT_LANGUAGE);
         user.setLogin("john");
         user.setEmail("john.doe@example.com");
-        mailService.sendEmailFromTemplate(user, "mail/testEmail", "email.test.title");
+        String langKey = Optional.ofNullable(user.getLangKey()).orElse("fr"); // Use "fr" as the default language if the language key is null
+        mailService.sendEmailFromTemplate(user, "mail/activationEmail", "email.activation.title", langKey);
         verify(javaMailSender).send(messageCaptor.capture());
         MimeMessage message = messageCaptor.getValue();
         assertThat(message.getSubject()).isEqualTo("test title");
@@ -194,28 +196,29 @@ class MailServiceIT {
     }
 
     @Test
-    void testSendLocalizedEmailForAllSupportedLanguages() throws Exception {
-        User user = new User();
-        user.setLogin("john");
-        user.setEmail("john.doe@example.com");
-        for (String langKey : languages) {
-            user.setLangKey(langKey);
-            mailService.sendEmailFromTemplate(user, "mail/testEmail", "email.test.title");
-            verify(javaMailSender, atLeastOnce()).send(messageCaptor.capture());
-            MimeMessage message = messageCaptor.getValue();
+void testSendLocalizedEmailForAllSupportedLanguages() throws Exception {
+    User user = new User();
+    user.setLogin("john");
+    user.setEmail("john.doe@example.com");
+    for (String langKey : languages) {
+        String userLangKey = Optional.ofNullable(user.getLangKey()).orElse("fr"); // Use "fr" as the default language if the language key is null
+        user.setLangKey(langKey);
+        mailService.sendEmailFromTemplate(user, "mail/activationEmail", "email.activation.title", userLangKey);
+        verify(javaMailSender, atLeastOnce()).send(messageCaptor.capture());
+        MimeMessage message = messageCaptor.getValue();
 
-            String propertyFilePath = "i18n/messages_" + getJavaLocale(langKey) + ".properties";
-            URL resource = this.getClass().getClassLoader().getResource(propertyFilePath);
-            File file = new File(new URI(resource.getFile()).getPath());
-            Properties properties = new Properties();
-            properties.load(new InputStreamReader(new FileInputStream(file), Charset.forName("UTF-8")));
+        String propertyFilePath = "i18n/messages_" + getJavaLocale(userLangKey) + ".properties";
+        URL resource = this.getClass().getClassLoader().getResource(propertyFilePath);
+        File file = new File(new URI(resource.getFile()).getPath());
+        Properties properties = new Properties();
+        properties.load(new InputStreamReader(new FileInputStream(file), Charset.forName("UTF-8")));
 
-            String emailTitle = (String) properties.get("email.test.title");
-            assertThat(message.getSubject()).isEqualTo(emailTitle);
-            assertThat(message.getContent().toString())
-                .isEqualToNormalizingNewlines("<html>" + emailTitle + ", http://127.0.0.1:8080, john</html>\n");
-        }
+        String emailTitle = (String) properties.get("email.test.title");
+        assertThat(message.getSubject()).isEqualTo(emailTitle);
+        assertThat(message.getContent().toString())
+            .isEqualToNormalizingNewlines("<html>" + emailTitle + ", http://127.0.0.1:8080, john</html>\n");
     }
+}
 
     /**
      * Convert a lang key to the Java locale.
