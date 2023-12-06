@@ -164,6 +164,18 @@ public class PhotoResource {
     }
 
     /**
+     * {@code GET  /photos/:id} : get the "id" photo.
+     * @param id the id of the photoDTO to retrieve.
+     * @return the {@link ResponseEntity} with status {@code 200 (OK)} and with body the photoDTO, or with status {@code 404 (Not Found)}.
+     */
+    @GetMapping("/photo-with-categories/{id}")
+    public ResponseEntity<PhotoDTO> getPhotoWithCategories(@PathVariable String id) {
+        log.debug("REST request to get Photo with Categories : {}", id);
+        Optional<PhotoDTO> photoDTO = photoService.findOneWithCategory(id);
+        return ResponseUtil.wrapOrNotFound(photoDTO);
+    }
+
+    /**
      * {@code DELETE  /photos/:id} : delete the "id" photo.
      *
      * @param id the id of the photoDTO to delete.

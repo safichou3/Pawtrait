@@ -1,8 +1,12 @@
 package com.studiogoat.pawtrait.service;
 
+import com.studiogoat.pawtrait.domain.Category;
 import com.studiogoat.pawtrait.domain.Photo;
+import com.studiogoat.pawtrait.domain.User;
 import com.studiogoat.pawtrait.repository.PhotoRepository;
+import com.studiogoat.pawtrait.service.dto.CategoryDTO;
 import com.studiogoat.pawtrait.service.dto.PhotoDTO;
+import com.studiogoat.pawtrait.service.dto.UserDTO;
 import com.studiogoat.pawtrait.service.mapper.PhotoMapper;
 import java.util.Optional;
 import org.slf4j.Logger;
@@ -22,6 +26,49 @@ public class PhotoService {
     private final PhotoRepository photoRepository;
 
     private final PhotoMapper photoMapper;
+
+    private PhotoDTO toDto(Photo photo) {
+        PhotoDTO dto = new PhotoDTO();
+
+        dto.setId(photo.getId());
+        dto.setPhotoUrl(photo.getPhotoUrl());
+        dto.setDescription(photo.getDescription());
+        dto.setCuteness(photo.getCuteness());
+        dto.setCreatedAt(photo.getCreatedAt());
+        dto.setUpdatedAt(photo.getUpdatedAt());
+        dto.setDeletedAt(photo.getDeletedAt());
+
+        if (photo.getCategory() != null) {
+            CategoryDTO categoryDTO = toCategoryDto(photo.getCategory());
+            dto.setCategory(categoryDTO);
+        }
+
+        if (photo.getUser() != null) {
+            UserDTO userDTO = toUserDto(photo.getUser());
+            dto.setUser(userDTO);
+        }
+
+        return dto;
+    }
+
+    private CategoryDTO toCategoryDto(Category category) {
+        CategoryDTO categoryDTO = new CategoryDTO();
+        categoryDTO.setId(category.getId());
+        categoryDTO.setName(category.getName());
+        categoryDTO.setCreatedAt(category.getCreatedAt());
+        categoryDTO.setUpdatedAt(category.getUpdatedAt());
+        categoryDTO.setDeletedAt(category.getDeletedAt());
+        return categoryDTO;
+    }
+
+    private UserDTO toUserDto(User user) {
+        UserDTO userDTO = new UserDTO();
+        userDTO.setId(user.getId());
+        userDTO.setLogin(user.getLogin());
+        userDTO.setFirstName(user.getFirstName());
+        userDTO.setLastName(user.getLastName());
+        return userDTO;
+    }
 
     public PhotoService(PhotoRepository photoRepository, PhotoMapper photoMapper) {
         this.photoRepository = photoRepository;
@@ -94,6 +141,15 @@ public class PhotoService {
     public Optional<PhotoDTO> findOne(String id) {
         log.debug("Request to get Photo : {}", id);
         return photoRepository.findById(id).map(photoMapper::toDto);
+    }
+
+    /**
+     * Get one photo by id with category.
+     * @param id the id of the entity.
+     * @return the entity.
+     */
+    public Optional<PhotoDTO> findOneWithCategory(String id) {
+        return photoRepository.findById(id).map(this::toDto);
     }
 
     /**
