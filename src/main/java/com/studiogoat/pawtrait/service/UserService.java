@@ -9,6 +9,7 @@ import com.studiogoat.pawtrait.security.AuthoritiesConstants;
 import com.studiogoat.pawtrait.security.SecurityUtils;
 import com.studiogoat.pawtrait.service.dto.AdminUserDTO;
 import com.studiogoat.pawtrait.service.dto.UserDTO;
+
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
@@ -47,7 +48,7 @@ public class UserService {
     private final CacheManager cacheManager;
 
     @Autowired
-private JavaMailSender javaMailSender;
+    private JavaMailSender javaMailSender;
 
 
     public UserService(
@@ -141,25 +142,27 @@ private JavaMailSender javaMailSender;
         userRepository.save(newUser);
         this.clearUserCaches(newUser);
         log.debug("Created Information for User: {}", newUser);
-    
+
         // Envoyer un e-mail de confirmation
         sendConfirmationEmail(newUser);
-    
+
         return newUser;
     }
-private void sendConfirmationEmail(User user) {
-    MimeMessage mimeMessage = javaMailSender.createMimeMessage();
-    MimeMessageHelper messageHelper = new MimeMessageHelper(mimeMessage, "utf-8");
 
-    try {
-        messageHelper.setText("Merci de vous être inscrit sur Pawtrait.");
-        messageHelper.setTo(user.getEmail());
-        messageHelper.setSubject("Confirmation d'inscription sur Pawtrait");
-        javaMailSender.send(mimeMessage);
-    } catch (MessagingException e) {
-        log.error("Erreur lors de l'envoi de l'e-mail de confirmation", e);
+    private void sendConfirmationEmail(User user) {
+        MimeMessage mimeMessage = javaMailSender.createMimeMessage();
+        MimeMessageHelper messageHelper = new MimeMessageHelper(mimeMessage, "utf-8");
+
+        try {
+            messageHelper.setText("Merci de vous être inscrit sur Pawtrait.");
+            messageHelper.setTo(user.getEmail());
+            messageHelper.setSubject("Confirmation d'inscription sur Pawtrait");
+            javaMailSender.send(mimeMessage);
+        } catch (MessagingException e) {
+            log.error("Erreur lors de l'envoi de l'e-mail de confirmation", e);
+        }
     }
-}
+
     private boolean removeNonActivatedUser(User existingUser) {
         if (existingUser.isActivated()) {
             return false;
@@ -253,6 +256,14 @@ private void sendConfirmationEmail(User user) {
             });
     }
 
+    public void deleteUserById(String id) {
+        userRepository.findById(id).ifPresent(user -> {
+            userRepository.delete(user);
+            this.clearUserCaches(user);
+            log.debug("Deleted User: {}", user);
+        });
+    }
+
     /**
      * Update basic information (first name, last name, email, language) for the current user.
      *
@@ -305,6 +316,29 @@ private void sendConfirmationEmail(User user) {
         return userRepository.findAllByIdNotNullAndActivatedIsTrue(pageable).map(UserDTO::new);
     }
 
+    public Optional<UserDTO> getPublicUserProfile(String id) {
+        return userRepository.findById(id)
+            .map(user -> {
+                UserDTO userDTO = new UserDTO();
+                userDTO.setId(user.getId());
+                userDTO.setLogin(user.getLogin());
+                userDTO.setFirstName(user.getFirstName());  // Assuming first name is public
+                userDTO.setLastName(user.getLastName());    // Assuming last name is public
+                userDTO.setProfilePictureUrl(user.getImageUrl()); // Assuming profile picture is public
+                // Add any other public fields here
+                return userDTO;
+            });
+    }
+
+    public Optional<AdminUserDTO> getFullUserProfile(String id) {
+        return userRepository.findById(id)
+            .map(user -> {
+                AdminUserDTO adminUserDTO = new AdminUserDTO(user);
+                // The AdminUserDTO constructor should handle the mapping
+                return adminUserDTO;
+            });
+    }
+
     public Optional<User> getUserWithAuthoritiesByLogin(String login) {
         return userRepository.findOneByLogin(login);
     }
@@ -331,6 +365,7 @@ private void sendConfirmationEmail(User user) {
 
     /**
      * Gets a list of all the authorities.
+     *
      * @return a list of all the authorities.
      */
     public List<String> getAuthorities() {

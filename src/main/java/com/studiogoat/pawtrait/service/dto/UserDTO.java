@@ -1,6 +1,7 @@
 package com.studiogoat.pawtrait.service.dto;
 
 import com.studiogoat.pawtrait.domain.User;
+
 import java.io.Serializable;
 
 /**
@@ -21,6 +22,7 @@ public class UserDTO implements Serializable {
     private String bio;
 
     private String profilePictureUrl;
+
     public UserDTO() {
         // Empty constructor needed for Jackson.
     }
@@ -77,6 +79,7 @@ public class UserDTO implements Serializable {
     public void setProfilePictureUrl(String profilePictureUrl) {
         this.profilePictureUrl = profilePictureUrl;
     }
+
     public void setLogin(String login) {
         this.login = login;
     }
@@ -87,6 +90,8 @@ public class UserDTO implements Serializable {
         return "UserDTO{" +
             "id='" + id + '\'' +
             ", login='" + login + '\'' +
+            ", bio='" + bio + '\'' +
+            ", profilePictureUrl='" + profilePictureUrl + '\'' +
             "}";
     }
 }

@@ -6,16 +6,19 @@ import com.studiogoat.pawtrait.repository.UserRepository;
 import com.studiogoat.pawtrait.security.AuthoritiesConstants;
 import com.studiogoat.pawtrait.service.MailService;
 import com.studiogoat.pawtrait.service.UserService;
+import com.studiogoat.pawtrait.service.dto.UserDTO;
 import com.studiogoat.pawtrait.service.dto.AdminUserDTO;
 import com.studiogoat.pawtrait.web.rest.errors.BadRequestAlertException;
 import com.studiogoat.pawtrait.web.rest.errors.EmailAlreadyUsedException;
 import com.studiogoat.pawtrait.web.rest.errors.LoginAlreadyUsedException;
+
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.*;
 import java.util.Collections;
 import javax.validation.Valid;
 import javax.validation.constraints.Pattern;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -31,6 +34,7 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import tech.jhipster.web.util.HeaderUtil;
 import tech.jhipster.web.util.PaginationUtil;
 import tech.jhipster.web.util.ResponseUtil;
+
 
 /**
  * REST controller for managing users.
@@ -60,21 +64,7 @@ import tech.jhipster.web.util.ResponseUtil;
 @RequestMapping("/api/admin")
 public class UserResource {
 
-    private static final List<String> ALLOWED_ORDERED_PROPERTIES = Collections.unmodifiableList(
-        Arrays.asList(
-            "id",
-            "login",
-            "firstName",
-            "lastName",
-            "email",
-            "activated",
-            "langKey",
-            "createdBy",
-            "createdDate",
-            "lastModifiedBy",
-            "lastModifiedDate"
-        )
-    );
+    private static final List<String> ALLOWED_ORDERED_PROPERTIES = List.of("id", "login", "firstName", "lastName", "email", "activated", "langKey", "createdBy", "createdDate", "lastModifiedBy", "lastModifiedDate");
 
     private final Logger log = LoggerFactory.getLogger(UserResource.class);
 
@@ -102,7 +92,7 @@ public class UserResource {
      *
      * @param userDTO the user to create.
      * @return the {@link ResponseEntity} with status {@code 201 (Created)} and with body the new user, or with status {@code 400 (Bad Request)} if the login or email is already in use.
-     * @throws URISyntaxException if the Location URI syntax is incorrect.
+     * @throws URISyntaxException       if the Location URI syntax is incorrect.
      * @throws BadRequestAlertException {@code 400 (Bad Request)} if the login or email is already in use.
      */
     @PostMapping("/users")
@@ -193,13 +183,32 @@ public class UserResource {
         return ResponseUtil.wrapOrNotFound(userService.getUserWithAuthoritiesByLogin(login).map(AdminUserDTO::new));
     }
 
+    // Public profile endpoint
+    @GetMapping("/users/public/{id}")
+    public ResponseEntity<UserDTO> getPublicUser(@PathVariable String id) {
+        log.debug("REST request to get public User profile : {}", id);
+        return userService.getPublicUserProfile(id)
+            .map(ResponseEntity::ok)
+            .orElseGet(() -> ResponseEntity.notFound().build());
+    }
+
+    // Private profile endpoint
+    @GetMapping("/users/{id}")
+    @PreAuthorize("hasAuthority('ROLE_USER') and @securityUtils.isCurrentUserInSession(#id) or hasAuthority('ROLE_ADMIN')")
+    public ResponseEntity<AdminUserDTO> getFullUser(@PathVariable String id) {
+        log.debug("REST request to get full User profile : {}", id);
+        return userService.getFullUserProfile(id)
+            .map(ResponseEntity::ok)
+            .orElseGet(() -> ResponseEntity.notFound().build());
+    }
+
     /**
      * {@code DELETE /admin/users/:login} : delete the "login" User.
      *
-     * @param login the login of the user to delete.
+     * @param id the login of the user to delete.
      * @return the {@link ResponseEntity} with status {@code 204 (NO_CONTENT)}.
      */
-    @DeleteMapping("/users/{login}")
+   /* @DeleteMapping("/users/{login}")
     @PreAuthorize("hasAuthority(\"" + AuthoritiesConstants.ADMIN + "\")")
     public ResponseEntity<Void> deleteUser(@PathVariable @Pattern(regexp = Constants.LOGIN_REGEX) String login) {
         log.debug("REST request to delete User: {}", login);
@@ -208,5 +217,13 @@ public class UserResource {
             .noContent()
             .headers(HeaderUtil.createAlert(applicationName, "A user is deleted with identifier " + login, login))
             .build();
+    }*/
+
+    @DeleteMapping("/users/{id}")
+    @PreAuthorize("hasAuthority('ROLE_ADMIN') or @securityUtils.isCurrentUserInSession(#id)")
+    public ResponseEntity<Void> deleteUser(@PathVariable String id) {
+        log.debug("REST request to delete User: {}", id);
+        userService.deleteUserById(id);
+        return ResponseEntity.noContent().build();
     }
 }
