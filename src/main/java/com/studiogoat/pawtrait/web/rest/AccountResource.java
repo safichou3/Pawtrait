@@ -10,9 +10,11 @@ import com.studiogoat.pawtrait.service.dto.PasswordChangeDTO;
 import com.studiogoat.pawtrait.web.rest.errors.*;
 import com.studiogoat.pawtrait.web.rest.vm.KeyAndPasswordVM;
 import com.studiogoat.pawtrait.web.rest.vm.ManagedUserVM;
+
 import java.util.*;
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
+
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -51,7 +53,7 @@ public class AccountResource {
      * {@code POST  /register} : register the user.
      *
      * @param managedUserVM the managed user View Model.
-     * @throws InvalidPasswordException {@code 400 (Bad Request)} if the password is incorrect.
+     * @throws InvalidPasswordException  {@code 400 (Bad Request)} if the password is incorrect.
      * @throws EmailAlreadyUsedException {@code 400 (Bad Request)} if the email is already used.
      * @throws LoginAlreadyUsedException {@code 400 (Bad Request)} if the login is already used.
      */
@@ -110,7 +112,7 @@ public class AccountResource {
      *
      * @param userDTO the current user information.
      * @throws EmailAlreadyUsedException {@code 400 (Bad Request)} if the email is already used.
-     * @throws RuntimeException {@code 500 (Internal Server Error)} if the user login wasn't found.
+     * @throws RuntimeException          {@code 500 (Internal Server Error)} if the user login wasn't found.
      */
     @PostMapping("/account")
     public void saveAccount(@Valid @RequestBody AdminUserDTO userDTO) {
@@ -133,6 +135,69 @@ public class AccountResource {
             userDTO.getImageUrl()
         );
     }
+
+    /**
+     * {@code PUT  /account} : update the current user information.
+     *
+     * @param userDTO the current user information.
+     * @throws EmailAlreadyUsedException {@code 400 (Bad Request)} if the email is already used.
+     * @throws RuntimeException          {@code 500 (Internal Server Error)} if the user login wasn't found.
+     */
+    @PutMapping("/account")
+    public void updateAccount(@Valid @RequestBody AdminUserDTO userDTO) {
+        String userLogin = SecurityUtils
+            .getCurrentUserLogin()
+            .orElseThrow(() -> new AccountResourceException("Current user login not found"));
+        Optional<User> existingUser = userRepository.findOneByEmailIgnoreCase(userDTO.getEmail());
+        if (existingUser.isPresent() && (!existingUser.get().getLogin().equalsIgnoreCase(userLogin))) {
+            throw new EmailAlreadyUsedException();
+        }
+        Optional<User> user = userRepository.findOneByLogin(userLogin);
+        if (!user.isPresent()) {
+            throw new AccountResourceException("User could not be found");
+        }
+        userService.updateUser(
+            userDTO.getFirstName(),
+            userDTO.getLastName(),
+            userDTO.getEmail(),
+            userDTO.getLangKey(),
+            userDTO.getImageUrl()
+        );
+    }
+
+    @PatchMapping("/account")
+    public void updateAccountPartial(@RequestBody Map<String, Object> updates) {
+        String userLogin = SecurityUtils.getCurrentUserLogin()
+            .orElseThrow(() -> new AccountResourceException("Current user login not found"));
+
+        Optional<User> userOptional = userRepository.findOneByLogin(userLogin);
+        if (!userOptional.isPresent()) {
+            throw new AccountResourceException("User could not be found");
+        }
+
+        User user = userOptional.get();
+
+        if (updates.containsKey("login")) {
+            user.setFirstName((String) updates.get("login"));
+        }
+
+        if (updates.containsKey("firstName")) {
+            user.setFirstName((String) updates.get("firstName"));
+        }
+        if (updates.containsKey("lastName")) {
+            user.setLastName((String) updates.get("lastName"));
+        }
+        if (updates.containsKey("email")) {
+            String email = (String) updates.get("email");
+            if (userRepository.findOneByEmailIgnoreCase(email).isPresent() &&
+                !userRepository.findOneByEmailIgnoreCase(email).get().getLogin().equalsIgnoreCase(userLogin)) {
+                throw new EmailAlreadyUsedException();
+            }
+            user.setEmail(email);
+        }
+        userRepository.save(user);
+    }
+
 
     /**
      * {@code POST  /account/change-password} : changes the current user's password.
@@ -159,8 +224,6 @@ public class AccountResource {
         if (user.isPresent()) {
             mailService.sendPasswordResetMail(user.get());
         } else {
-            // Pretend the request has been successful to prevent checking which emails really exist
-            // but log that an invalid attempt has been made
             log.warn("Password reset requested for non existing mail");
         }
     }
@@ -170,7 +233,7 @@ public class AccountResource {
      *
      * @param keyAndPassword the generated key and the new password.
      * @throws InvalidPasswordException {@code 400 (Bad Request)} if the password is incorrect.
-     * @throws RuntimeException {@code 500 (Internal Server Error)} if the password could not be reset.
+     * @throws RuntimeException         {@code 500 (Internal Server Error)} if the password could not be reset.
      */
     @PostMapping(path = "/account/reset-password/finish")
     public void finishPasswordReset(@RequestBody KeyAndPasswordVM keyAndPassword) {
@@ -187,8 +250,8 @@ public class AccountResource {
     private static boolean isPasswordLengthInvalid(String password) {
         return (
             StringUtils.isEmpty(password) ||
-            password.length() < ManagedUserVM.PASSWORD_MIN_LENGTH ||
-            password.length() > ManagedUserVM.PASSWORD_MAX_LENGTH
+                password.length() < ManagedUserVM.PASSWORD_MIN_LENGTH ||
+                password.length() > ManagedUserVM.PASSWORD_MAX_LENGTH
         );
     }
 }

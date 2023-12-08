@@ -19,10 +19,6 @@ public class UserDTO implements Serializable {
 
     private String lastName;
 
-    private String bio;
-
-    private String profilePictureUrl;
-
     public UserDTO() {
         // Empty constructor needed for Jackson.
     }
@@ -32,8 +28,6 @@ public class UserDTO implements Serializable {
         this.login = user.getLogin();
         this.firstName = user.getFirstName();
         this.lastName = user.getLastName();
-//        this.bio = user.getBio();
-//        this.profilePictureUrl = user.getProfilePictureUrl();
     }
 
     public String getId() {
@@ -64,22 +58,6 @@ public class UserDTO implements Serializable {
         this.lastName = lastName;
     }
 
-    public String getBio() {
-        return bio;
-    }
-
-    public void setBio(String bio) {
-        this.bio = bio;
-    }
-
-    public String getProfilePictureUrl() {
-        return profilePictureUrl;
-    }
-
-    public void setProfilePictureUrl(String profilePictureUrl) {
-        this.profilePictureUrl = profilePictureUrl;
-    }
-
     public void setLogin(String login) {
         this.login = login;
     }
@@ -90,8 +68,6 @@ public class UserDTO implements Serializable {
         return "UserDTO{" +
             "id='" + id + '\'' +
             ", login='" + login + '\'' +
-            ", bio='" + bio + '\'' +
-            ", profilePictureUrl='" + profilePictureUrl + '\'' +
             "}";
     }
 }

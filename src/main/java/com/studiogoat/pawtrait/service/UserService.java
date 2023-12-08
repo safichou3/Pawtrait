@@ -10,6 +10,7 @@ import com.studiogoat.pawtrait.security.SecurityUtils;
 import com.studiogoat.pawtrait.service.dto.AdminUserDTO;
 import com.studiogoat.pawtrait.service.dto.UserDTO;
 
+import java.io.Serializable;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
@@ -322,19 +323,17 @@ public class UserService {
                 UserDTO userDTO = new UserDTO();
                 userDTO.setId(user.getId());
                 userDTO.setLogin(user.getLogin());
-                userDTO.setFirstName(user.getFirstName());  // Assuming first name is public
-                userDTO.setLastName(user.getLastName());    // Assuming last name is public
-                userDTO.setProfilePictureUrl(user.getImageUrl()); // Assuming profile picture is public
-                // Add any other public fields here
+                userDTO.setFirstName(user.getFirstName());
+                userDTO.setLastName(user.getLastName());
                 return userDTO;
             });
     }
+
 
     public Optional<AdminUserDTO> getFullUserProfile(String id) {
         return userRepository.findById(id)
             .map(user -> {
                 AdminUserDTO adminUserDTO = new AdminUserDTO(user);
-                // The AdminUserDTO constructor should handle the mapping
                 return adminUserDTO;
             });
     }

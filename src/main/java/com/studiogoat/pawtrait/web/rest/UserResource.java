@@ -183,7 +183,6 @@ public class UserResource {
         return ResponseUtil.wrapOrNotFound(userService.getUserWithAuthoritiesByLogin(login).map(AdminUserDTO::new));
     }
 
-    // Public profile endpoint
     @GetMapping("/users/public/{id}")
     public ResponseEntity<UserDTO> getPublicUser(@PathVariable String id) {
         log.debug("REST request to get public User profile : {}", id);
@@ -192,7 +191,6 @@ public class UserResource {
             .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
-    // Private profile endpoint
     @GetMapping("/users/{id}")
     @PreAuthorize("hasAuthority('ROLE_USER') and @securityUtils.isCurrentUserInSession(#id) or hasAuthority('ROLE_ADMIN')")
     public ResponseEntity<AdminUserDTO> getFullUser(@PathVariable String id) {
@@ -208,17 +206,6 @@ public class UserResource {
      * @param id the login of the user to delete.
      * @return the {@link ResponseEntity} with status {@code 204 (NO_CONTENT)}.
      */
-   /* @DeleteMapping("/users/{login}")
-    @PreAuthorize("hasAuthority(\"" + AuthoritiesConstants.ADMIN + "\")")
-    public ResponseEntity<Void> deleteUser(@PathVariable @Pattern(regexp = Constants.LOGIN_REGEX) String login) {
-        log.debug("REST request to delete User: {}", login);
-        userService.deleteUser(login);
-        return ResponseEntity
-            .noContent()
-            .headers(HeaderUtil.createAlert(applicationName, "A user is deleted with identifier " + login, login))
-            .build();
-    }*/
-
     @DeleteMapping("/users/{id}")
     @PreAuthorize("hasAuthority('ROLE_ADMIN') or @securityUtils.isCurrentUserInSession(#id)")
     public ResponseEntity<Void> deleteUser(@PathVariable String id) {
